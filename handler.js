@@ -3,6 +3,28 @@ const AWS = require('aws-sdk')
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 module.exports.deleteBook = (event, context, callback) => {
   console.log(event, context)
+  const {pathParameters} = event;
+  
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    // will update if the hashkey already exist
+    Item: {
+      UUID : pathParameters.uuid,
+    }
+  }
+  
+
+  
+  dynamodb.delete(params, function(err, data) {
+    if (err) console.log(err);
+    else  {
+      const response = {
+        statusCode: 200,
+        body: JSON.stringify(data.Item)
+      }
+      callback(null, response)
+    }
+  });
 }
 module.exports.updateBook = (event, context, callback) => {
   console.log(event, context)
@@ -13,7 +35,7 @@ module.exports.updateBook = (event, context, callback) => {
     // will update if the hashkey already exist
     Item: {
       UUID : pathParameters.uuid,
-      ...event.body
+      ...JSON.parse(event.body)
     }
   }
   
@@ -34,9 +56,9 @@ module.exports.getBook = (event, context, callback) => {
   const {pathParameters} = event;
 
   var params = {
-    TableName : 'Table',
+    TableName : process.env.DYNAMODB_TABLE,
     Key: {
-      HashKey: pathParameters.uuid
+      UUID: pathParameters.uuid
     }
   };
   
